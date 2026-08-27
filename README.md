@@ -1,74 +1,115 @@
-# A-level school test project
+# Marketplace OLX — A-level school project
 
-## [Link to build](http://marketplace_olx.holevchukevgeny.php.a-level.com.ua/)
+## 🌐 Live Demo
 
-# Getting Started with Create React App
+**Frontend:** [https://marketplaceolxui.netlify.app/](https://marketplaceolxui.netlify.app/)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> The backend runs on Render's free tier and may take ~30 seconds to wake up on the first request after a period of inactivity — this is normal.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🏗️ Architecture
 
-### `npm start`
+| Layer | Technology | Hosting |
+|---|---|---|
+| Frontend | React 18, Redux, MUI, React Router v6 | [Netlify](https://netlify.com) |
+| Backend | Node.js, Express, GraphQL | [Render](https://render.com) |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Running Locally
 
-### `npm test`
+You need **two terminals** — one for the backend server, one for the frontend.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 1. Start the backend server
 
-### `npm run build`
+```bash
+cd server
+npm install
+npm run seed     # optional: loads 3 demo users, 12 ads, comments and images
+npm start        # http://localhost:4000
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Start the frontend
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+# in the project root
+npm install
+npm start        # http://localhost:3000
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+The frontend automatically connects to `http://localhost:4000/` in development (see `src/config.js`).
 
-### `npm run eject`
+### Demo credentials (after seeding)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Login | Password |
+|---|---|
+| demo1 | 123456 |
+| demo2 | 123456 |
+| demo3 | 123456 |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## ⚙️ Backend (`server/`)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+A self-contained Express + GraphQL server that replaces the original course backend.
 
-## Learn More
+### API endpoints
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+| Endpoint | Description |
+|---|---|
+| `POST /graphql` | All queries and mutations |
+| `POST /upload` | Image upload (requires Authorization header) |
+| `GET /uploads/<name>` | Serve uploaded images |
+| `GET /` | Status and record counts |
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Server scripts
 
-### Code Splitting
+```bash
+npm start        # production
+npm run dev      # development with --watch (auto-restart on save)
+npm run seed     # wipe database and load demo data
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Configuration
 
-### Analyzing the Bundle Size
+| Env variable | Default | Description |
+|---|---|---|
+| `PORT` | `4000` | Port the server listens on |
+| `JWT_SECRET` | auto-generated | Override to keep tokens valid across restarts |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+To point the frontend at a different backend, create `.env.local` in the project root:
 
-### Making a Progressive Web App
+```
+REACT_APP_BACKEND_URL=https://your-server.onrender.com/
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+> ⚠️ The trailing slash is required.
 
-### Advanced Configuration
+### Storage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- `server/data/db.json` — JSON database (users, ads, comments, images)
+- `server/uploads/` — uploaded image files
 
-### Deployment
+Both are gitignored. On Render's free tier the filesystem is ephemeral — demo data is automatically re-seeded on each restart.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 🛠️ Frontend Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+In the project root:
+
+```bash
+npm start          # dev server at http://localhost:3000
+npm run build      # production build → build/
+npm test           # run tests
+```
+
+---
+
+## 📦 Deployment
+
+- **Frontend** auto-deploys to Netlify on every push to `main`
+- **Backend** auto-deploys to Render on every push to `main`
+- SPA routing is handled by [`public/_redirects`](public/_redirects) (Netlify)
+- Build config is in [`netlify.toml`](netlify.toml)
