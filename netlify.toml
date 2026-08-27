@@ -1,0 +1,7 @@
+[build]
+  command   = "npm run build"
+  publish   = "build"
+
+[build.environment]
+  # Prevents the CRA build from treating warnings as errors on Netlify CI
+  CI = "false"

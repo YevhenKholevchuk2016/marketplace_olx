@@ -1,6 +1,11 @@
 const jwtDecode = (token) =>{
 	try {
-		return JSON.parse(atob(token.split('.')[1]))
+		// The payload is base64url, which atob rejects because of its '-' and '_'
+		// characters, so translate it to plain base64 first. Decoding through
+		// TextDecoder keeps non-ASCII logins intact.
+		const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+		const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0))
+		return JSON.parse(new TextDecoder().decode(bytes))
 	}
 	catch(e){
 	}

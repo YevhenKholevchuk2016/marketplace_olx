@@ -1,0 +1,9 @@
+node_modules/
+
+# runtime state: the JSON database and everything users upload
+data/
+uploads/
+
+.env
+.env.local
+npm-debug.log*
