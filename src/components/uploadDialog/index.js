@@ -8,6 +8,7 @@ import Modal from '@mui/material/Modal';
 
 import actionUploadFile from "../../actions/uploadFile";
 import actionUpdateAvatar from "../../actions/updateAvatar";
+import { actionPromiseClear } from "../../actions/promise";
 
 const focusedStyle = {
 	borderColor: '#2196f3'
@@ -136,9 +137,23 @@ const UploadDialogRedux = ({isOpen, handleClose}) => {
 	const upload = useSelector(state => state.promise.upload)
 	const dispatch = useDispatch();
 
+	const onClose = () => {
+		dispatch(actionPromiseClear('upload'));
+		if (handleClose) {
+			handleClose();
+		}
+	}
+
+	useEffect(() => {
+		dispatch(actionPromiseClear('upload'));
+		return () => {
+			dispatch(actionPromiseClear('upload'));
+		}
+	}, []);
+
 	return(
 		<UploadDialog isOpen={isOpen}
-					  handleClose={handleClose}
+					  handleClose={onClose}
 					  onUpload={(file) => dispatch(actionUploadFile(file))}
 					  onUpdateAvatar={() => dispatch(actionUpdateAvatar())}
 					  fileDataUpload={upload}

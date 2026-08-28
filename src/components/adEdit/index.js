@@ -27,6 +27,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import actionAd from "../../actions/ad";
 import actionOne from "../../actions/adOne";
 import actionUploadFile from "../../actions/uploadFile";
+import { actionPromiseClear } from "../../actions/promise";
 
 import config from "../../config";
 
@@ -151,7 +152,7 @@ const ImageItem = ({ image, onDelete }) => {
     )
 }
 
-const AdEdit = ({ onSave, onUpload, fileDataUpload, oldAd }) => {
+const AdEdit = ({ onSave, onUpload, oldAd }) => {
     const navigate = useNavigate();
     const [ad, setAd] = useState({ images: [], title: '', description: '', price: 0 });
 
@@ -190,14 +191,15 @@ const AdEdit = ({ onSave, onUpload, fileDataUpload, oldAd }) => {
     ]);
 
     useEffect(() => {
-        acceptedFiles.map(file => onUpload(file));
-    }, [acceptedFiles[0]]);
-
-    useEffect(() => {
-        if (fileDataUpload && fileDataUpload.status === 'FULFILLED') {
-            setAd({ ...ad, images: [...ad.images, fileDataUpload.payload] })
+        if (acceptedFiles && acceptedFiles.length > 0) {
+            acceptedFiles.forEach(async (file) => {
+                const uploadedFile = await onUpload(file);
+                if (uploadedFile) {
+                    setAd(prevAd => ({ ...prevAd, images: [...prevAd.images, uploadedFile] }));
+                }
+            });
         }
-    }, [fileDataUpload]);
+    }, [acceptedFiles]);
 
     useEffect(() => {
         if (oldAd) {
@@ -205,8 +207,6 @@ const AdEdit = ({ onSave, onUpload, fileDataUpload, oldAd }) => {
             setAd({ _id, price, title, description, images });
         }
     }, [oldAd]);
-
-    { (console.log('ad: ', ad)) }
 
     return (
         <div className="ad-edit">
@@ -271,20 +271,25 @@ const AdEdit = ({ onSave, onUpload, fileDataUpload, oldAd }) => {
 }
 
 const AdEditRedux = ({ loadOld }) => {
-    const upload = useSelector(state => state.promise.upload);
     const oneAd = useSelector(state => state.promise?.one?.payload);
     const dispatch = useDispatch();
     const params = useParams();
 
     useEffect(() => {
+        dispatch(actionPromiseClear('upload'));
         if (params.adID) {
-            dispatch(actionOne(params.adID))
+            dispatch(actionOne(params.adID));
         }
-    }, [params.adID])
+        return () => {
+            dispatch(actionPromiseClear('upload'));
+            if (params.adID) {
+                dispatch(actionPromiseClear('one'));
+            }
+        };
+    }, [params.adID]);
 
     return (
         <AdEdit onUpload={(file) => dispatch(actionUploadFile(file))}
-            fileDataUpload={upload}
             onSave={(ad) => dispatch(actionAd({ ...ad }))}
             oldAd={loadOld ? oneAd : false}
         />

@@ -15,4 +15,6 @@ const actionPromise = (name, promise) =>
 		}
 	}
 
+export const actionPromiseClear = (name) => ({type: 'PROMISE_CLEAR', name});
+
 export default actionPromise;
