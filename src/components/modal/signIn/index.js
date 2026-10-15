@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 
 import Box from '@mui/material/Box';
@@ -9,17 +9,75 @@ import TabsUnstyled from '@mui/base/TabsUnstyled';
 import TabsListUnstyled from '@mui/base/TabsListUnstyled';
 import TabPanelUnstyled from '@mui/base/TabPanelUnstyled';
 import TabUnstyled from '@mui/base/TabUnstyled';
+import LinearProgress from "@mui/material/LinearProgress";
 
 import actionFullLogin from "../../../actions/auth/fullLogin";
 import actionFullRegister from "../../../actions/auth/fullRegister";
+import config from "../../../config";
 
 import "../../../_assets/scss/_pages/signin.scss"
+
+const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 	const [loginSignIn, setLoginSignIn] = useState('');
 	const [passwordSignIn, setPasswordSignIn] = useState('');
 	const [loginRegister, setLoginRegister] = useState('');
 	const [passwordRegister, setPasswordRegister] = useState('');
+
+	const [signInErrors, setSignInErrors] = useState({});
+	const [registerErrors, setRegisterErrors] = useState({});
+
+	const [backendIsLoaded, setBackendIsLoaded] = useState(false);
+	const [isSignInClicked, setIsSignInClicked] = useState(false);
+	const [isRegisterClicked, setIsRegisterClicked] = useState(false);
+
+	useEffect(() => {
+		// Reset on any close, including when the parent sets isOpen to false directly.
+		if (!isOpen) {
+			setIsSignInClicked(false);
+			setIsRegisterClicked(false);
+		}
+	}, [isOpen]);
+
+	useEffect(() => {
+		// Render's free tier sleeps when idle; the request resolves once the server is awake.
+		fetch(config.backendURL)
+			.then(() => setBackendIsLoaded(true))
+			.catch(() => {});
+	}, []);
+
+	const renderBackendNotification = (isClicked) => isClicked && !backendIsLoaded && (
+		<div className="modal__notification">
+			<LinearProgress />
+			<p className="overlay-title">Let's connect to the service…</p>
+			<p className="overlay-sub">This project uses a free cloud hosting platform called Render.<br/>It may take 10 to 30 seconds to load. Please wait a moment.</p>
+		</div>
+	);
+
+	// Validation runs only on submit; a failed check blocks the request and shows the errors.
+	const handleSignInClick = () => {
+		const errors = {};
+		if (!loginSignIn.trim()) errors.email = 'Email is required';
+		if (!passwordSignIn) errors.password = 'Password is required';
+		setSignInErrors(errors);
+		if (Object.keys(errors).length) return;
+
+		setIsSignInClicked(true);
+		onSignIn(loginSignIn, passwordSignIn);
+	};
+
+	const handleRegisterClick = () => {
+		const errors = {};
+		if (!loginRegister.trim()) errors.email = 'Email is required';
+		else if (!EMAIL_PATTERN.test(loginRegister.trim())) errors.email = 'Enter a valid email address';
+		if (!passwordRegister) errors.password = 'Password is required';
+		setRegisterErrors(errors);
+		if (Object.keys(errors).length) return;
+
+		setIsRegisterClicked(true);
+		onRegister(loginRegister, passwordRegister);
+	};
 
 	return (
 		<Modal className="modal"
@@ -44,6 +102,7 @@ const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 						}}
 						>
 							<Box component="div">
+								{renderBackendNotification(isSignInClicked)}
 								<TextField margin="normal"
 										   required
 										   fullWidth
@@ -52,6 +111,8 @@ const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 										   name="email"
 										   autoComplete="email"
 										   value={loginSignIn}
+										   error={!!signInErrors.email}
+										   helperText={signInErrors.email}
 										   onChange={(e) => setLoginSignIn(e.target.value)}
 								/>
 								<TextField margin="normal"
@@ -63,13 +124,15 @@ const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 										   id="password"
 										   autoComplete="current-password"
 										   value={passwordSignIn}
+										   error={!!signInErrors.password}
+										   helperText={signInErrors.password}
 										   onChange={(e) => setPasswordSignIn(e.target.value)}
 								/>
 								<Button type="submit"
 										fullWidth
 										variant="contained"
-										sx={{ mt: 3 }}
-										onClick={() => onSignIn(loginSignIn, passwordSignIn)}
+										sx={{mt: 3}}
+										onClick={handleSignInClick}
 								>Sign In</Button>
 							</Box>
 						</Box>
@@ -83,6 +146,7 @@ const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 						}}
 						>
 							<Box component="div">
+								{renderBackendNotification(isRegisterClicked)}
 								<TextField margin="normal"
 										   required
 										   fullWidth
@@ -91,6 +155,8 @@ const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 										   name="email"
 										   autoComplete="email"
 										   value={loginRegister}
+										   error={!!registerErrors.email}
+										   helperText={registerErrors.email}
 										   onChange={(e) => setLoginRegister(e.target.value)}
 								/>
 								<TextField margin="normal"
@@ -102,13 +168,15 @@ const SignInModal = ({onSignIn, onRegister, isOpen, handleClose}) => {
 										   id="password"
 										   autoComplete="current-password"
 										   value={passwordRegister}
+										   error={!!registerErrors.password}
+										   helperText={registerErrors.password}
 										   onChange={(e) => setPasswordRegister(e.target.value)}
 								/>
 								<Button type="submit"
 										fullWidth
 										variant="contained"
 										sx={{ mt: 3 }}
-										onClick={() => onRegister(loginRegister, passwordRegister)}
+										onClick={handleRegisterClick}
 								>Register</Button>
 							</Box>
 						</Box>
